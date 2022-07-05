@@ -2,10 +2,14 @@ cmake_minimum_required (VERSION 3.8)
 
 project (VulkanTutorial)
 
-find_package (glfw3 REQUIRED)
-find_package (glm REQUIRED)
+add_subdirectory(../external/glfw3 glfw3)
+add_subdirectory(../external/glm glm)
+add_subdirectory(../external/tinyobjloader tinyobjloader)
+
+#find_package (glfw3 REQUIRED)
+#find_package (glm REQUIRED)
 find_package (Vulkan REQUIRED)
-find_package (tinyobjloader REQUIRED)
+#find_package (tinyobjloader REQUIRED)
 
 find_package (PkgConfig)
 pkg_get_variable (STB_INCLUDEDIR stb includedir)
@@ -13,6 +17,7 @@ if (NOT STB_INCLUDEDIR)
   unset (STB_INCLUDEDIR)
   find_path (STB_INCLUDEDIR stb_image.h PATH_SUFFIXES stb)
 endif ()
+set(STB_INCLUDEDIR ../external/stb)
 if (NOT STB_INCLUDEDIR)
   message (FATAL_ERROR "stb_image.h not found")
 endif ()
@@ -23,17 +28,19 @@ set_property (TARGET glslang::validator PROPERTY IMPORTED_LOCATION "${GLSLANG_VA
 
 function (add_shaders_target TARGET)
   cmake_parse_arguments ("SHADER" "" "CHAPTER_NAME" "SOURCES" ${ARGN})
-  set (SHADERS_DIR ${SHADER_CHAPTER_NAME}/shaders)
-  add_custom_command (
-    OUTPUT ${SHADERS_DIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_DIR}
-    )
+  set (SHADERS_DIR ${CMAKE_BINARY_DIR}/${SHADER_CHAPTER_NAME}/shaders)
+#  add_custom_command (
+#    OUTPUT ${SHADERS_DIR}
+#    COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_DIR}
+#    COMMENT "Make Shader Directory: ${SHADERS_DIR}"
+#    )
   add_custom_command (
     OUTPUT ${SHADERS_DIR}/frag.spv ${SHADERS_DIR}/vert.spv
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_DIR}
     COMMAND glslang::validator
     ARGS --target-env vulkan1.0 ${SHADER_SOURCES} --quiet
     WORKING_DIRECTORY ${SHADERS_DIR}
-    DEPENDS ${SHADERS_DIR} ${SHADER_SOURCES}
+    DEPENDS ${SHADER_SOURCES}
     COMMENT "Compiling Shaders"
     VERBATIM
     )
@@ -160,16 +167,32 @@ add_chapter (28_model_loading
   SHADER 27_shader_depth
   MODELS ../resources/viking_room.obj
   TEXTURES ../resources/viking_room.png
-  LIBS glm::glm tinyobjloader::tinyobjloader)
+  LIBS glm::glm tinyobjloader)
 
 add_chapter (29_mipmapping
   SHADER 27_shader_depth
   MODELS ../resources/viking_room.obj
   TEXTURES ../resources/viking_room.png
-  LIBS glm::glm tinyobjloader::tinyobjloader)
+  LIBS glm::glm tinyobjloader)
 
 add_chapter (30_multisampling
   SHADER 27_shader_depth
   MODELS ../resources/viking_room.obj
   TEXTURES ../resources/viking_room.png
-  LIBS glm::glm tinyobjloader::tinyobjloader)
+  LIBS glm::glm tinyobjloader)
+
+function (_get_all_cmake_targets out_var current_dir)
+    get_property(targets DIRECTORY ${current_dir} PROPERTY BUILDSYSTEM_TARGETS)
+    get_property(subdirs DIRECTORY ${current_dir} PROPERTY SUBDIRECTORIES)
+
+    foreach(subdir ${subdirs})
+        _get_all_cmake_targets(subdir_targets ${subdir})
+        list(APPEND targets ${subdir_targets})
+    endforeach()
+
+    set(${out_var} ${targets} PARENT_SCOPE)
+endfunction()
+
+# Run at end of top-level CMakeLists
+_get_all_cmake_targets(all_targets ${CMAKE_CURRENT_LIST_DIR})
+message(STATUS ${all_targets})
