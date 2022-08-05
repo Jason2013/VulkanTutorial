@@ -6,10 +6,7 @@ add_subdirectory(../external/glfw3 glfw3)
 add_subdirectory(../external/glm glm)
 add_subdirectory(../external/tinyobjloader tinyobjloader)
 
-#find_package (glfw3 REQUIRED)
-#find_package (glm REQUIRED)
 find_package (Vulkan REQUIRED)
-#find_package (tinyobjloader REQUIRED)
 
 find_package (PkgConfig)
 pkg_get_variable (STB_INCLUDEDIR stb includedir)
@@ -29,11 +26,6 @@ set_property (TARGET glslang::validator PROPERTY IMPORTED_LOCATION "${GLSLANG_VA
 function (add_shaders_target TARGET)
   cmake_parse_arguments ("SHADER" "" "CHAPTER_NAME" "SOURCES" ${ARGN})
   set (SHADERS_DIR ${CMAKE_BINARY_DIR}/${SHADER_CHAPTER_NAME}/shaders)
-#  add_custom_command (
-#    OUTPUT ${SHADERS_DIR}
-#    COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_DIR}
-#    COMMENT "Make Shader Directory: ${SHADERS_DIR}"
-#    )
   add_custom_command (
     OUTPUT ${SHADERS_DIR}/frag.spv ${SHADERS_DIR}/vert.spv
     COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_DIR}
