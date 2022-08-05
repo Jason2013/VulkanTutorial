@@ -187,4 +187,6 @@ endfunction()
 
 # Run at end of top-level CMakeLists
 _get_all_cmake_targets(all_targets ${CMAKE_CURRENT_LIST_DIR})
-message(STATUS ${all_targets})
+foreach(target_var IN LISTS all_targets)
+    message(STATUS "Target: ${target_var}")
+endforeach()
